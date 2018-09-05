@@ -61,7 +61,8 @@ if sat.strip() == "":
 output_filename = sat.strip() + "-" + str(year) + "_" \
         + str(month) + "_" + str(day) + "_" + str(hour) + "_" + str(minute) \
         + "_" + str(second) + "-" + str(inc) + "-" + str(num_samples) + ".csv"
-output_filename = output_filename.replace(" ", "_")
+output_filename = output_filename.replace(" ", "_").replace("(", "_")\          
+        .replace(")", "_").replace("/", "_") 
 
 outfile = open(output_filename, "w")
 
