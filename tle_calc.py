@@ -37,6 +37,13 @@ else:
     minute = int(start[4])
     second = int(start[5])
 
+yyear = year
+mmonth = month
+dday = day
+hhour = hour
+mminute = minute
+ssecond = second
+
 if num_samples * inc >= 1440:
     print "\nWarning: Longer than 24 hour period specified"
     print " (I won't stop you, but it might not work)"
@@ -197,6 +204,14 @@ else:
         outfile.close()
 
         eol_index = eol_index + 71 + 71 + 26
+
+        year = yyear
+        month = mmonth
+        dday = dday
+        hour = hhour
+        minute = mminute
+        second = ssecond
+
         print '.',
 
 print "\nDone"
