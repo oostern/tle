@@ -207,7 +207,7 @@ else:
 
         year = yyear
         month = mmonth
-        dday = dday
+        day = dday
         hour = hhour
         minute = mminute
         second = ssecond
