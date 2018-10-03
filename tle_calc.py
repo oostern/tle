@@ -9,7 +9,7 @@ from sgp4.io import twoline2rv
 days_per_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 url = raw_input("Enter TLE url: ")
-sat = raw_input("Enter satellite name: ").rstrip()
+sat = raw_input("Enter satellite name (blank for all): ").rstrip()
 start = raw_input("Enter start date (YYYY, MM, DD, HH, MM, SS): ")
 inc = int(raw_input("Enter sample interval (minutes): "))
 num_samples = int(\
@@ -55,73 +55,155 @@ if name_index == -1 or eol_index == -1:
     print "\nNo match for " + sat + " in TLE specified"
     exit(1)
 
-if sat.strip() == "":
-    sat = data[name_index:eol_index].strip()
+if sat.strip() != "":
+    print "Sate name not empty??"
+    print repr(sat.strip())
+    output_filename = sat.strip() + "-" + str(year) + "_" \
+            + str(month) + "_" + str(day) + "_" + str(hour) + "_" + str(minute) \
+            + "_" + str(second) + "-" + str(inc) + "-" + str(num_samples) + ".csv"
+    output_filename = output_filename.replace(" ", "_").replace("(", "_")\
+            .replace(")", "_").replace("/", "_")
 
-output_filename = sat.strip() + "-" + str(year) + "_" \
-        + str(month) + "_" + str(day) + "_" + str(hour) + "_" + str(minute) \
-        + "_" + str(second) + "-" + str(inc) + "-" + str(num_samples) + ".csv"
-output_filename = output_filename.replace(" ", "_").replace("(", "_")\
-        .replace(")", "_").replace("/", "_")
+    outfile = open(output_filename, "w")
 
-outfile = open(output_filename, "w")
+    line1_index = eol_index + 1
+    line2_index = eol_index + 72
 
-line1_index = eol_index + 1
-line2_index = eol_index + 72
+    line1 = data[line1_index:line1_index+70]
+    line2 = data[line2_index:line2_index+70]
 
-line1 = data[line1_index:line1_index+70]
-line2 = data[line2_index:line2_index+70]
+    satellite = twoline2rv(line1, line2, wgs84)
 
-satellite = twoline2rv(line1, line2, wgs84)
+    for i in range(num_samples):
+        minute += inc
 
-for i in range(num_samples):
-    minute += inc
+        if minute > 59:
+            hour += 1
+            minute = minute % 60
 
-    if minute > 59:
-        hour += 1
-        minute = minute % 60
+        if hour > 23:
+            day += 1
+            hour = hour % 24
 
-    if hour > 23:
-        day += 1
-        hour = hour % 24
+        if day > days_per_month[month - 1]:
+            month += 1
+            day = 1
 
-    if day > days_per_month[month - 1]:
-        month += 1
-        day = 1
+        if month > 12:
+            year += 1
+            month = 1
 
-    if month > 12:
-        year += 1
-        month = 1
+        datestamp = str(year).zfill(4) + "," + str(month).zfill(2) + "," \
+                + str(day).zfill(2) + "," + str(hour).zfill(2) + "," \
+                + str(minute).zfill(2) + "," + str(second).zfill(2)
 
-    datestamp = str(year).zfill(4) + "," + str(month).zfill(2) + "," \
-            + str(day).zfill(2) + "," + str(hour).zfill(2) + "," \
-            + str(minute).zfill(2) + "," + str(second).zfill(2)
+        position, v = satellite.propagate(year, month, day, hour, minute, second)
 
-    position, v = satellite.propagate(year, month, day, hour, minute, second)
+        position_string = ","
+        if (position[0] > 0):
+            position_string += " "
+        position_string += str(position[0]) + ","
 
-    position_string = ","
-    if (position[0] > 0):
-        position_string += " "
-    position_string += str(position[0]) + ","
+        while len(position_string) < 16:
+            position_string += " "
 
-    while len(position_string) < 16:
-        position_string += " "
+        if (position[1] > 0):
+            position_string += " "
 
-    if (position[1] > 0):
-        position_string += " "
+        position_string += str(position[1]) + ","
 
-    position_string += str(position[1]) + ","
+        while len(position_string) < 31:
+            position_string += " "
 
-    while len(position_string) < 31:
-        position_string += " "
+        if (position[2] > 0):
+            position_string += " "
 
-    if (position[2] > 0):
-        position_string += " "
+        position_string += str(position[2])
 
-    position_string += str(position[2])
+        outfile.write(datestamp + position_string + "\n");
 
-    outfile.write(datestamp + position_string + "\n");
+    outfile.close()
 
-outfile.close()
+else:
+    print "Getting all SVs"
+    print eol_index
+    print len(data)
+    while(eol_index < len(data)):
+        print "in while loop"
+        sat = data[(eol_index-25):eol_index].strip()
+
+        output_filename = sat.strip() + "-" + str(year) + "_" \
+                + str(month) + "_" + str(day) + "_" + str(hour) + "_" + str(minute) \
+                + "_" + str(second) + "-" + str(inc) + "-" + str(num_samples) + ".csv"
+        output_filename = output_filename.replace(" ", "_").replace("(", "_")\
+                .replace(")", "_").replace("/", "_")
+
+        outfile = open(output_filename, "w")
+
+        line1_index = eol_index + 1
+        line2_index = eol_index + 72
+
+        line1 = data[line1_index:line1_index+70]
+        line2 = data[line2_index:line2_index+70]
+
+        print "Using values"
+        print repr(sat)
+        print repr(line1)
+        print repr(line2)
+
+        satellite = twoline2rv(line1, line2, wgs84)
+
+        for i in range(num_samples):
+            minute += inc
+
+            if minute > 59:
+                hour += 1
+                minute = minute % 60
+
+            if hour > 23:
+                day += 1
+                hour = hour % 24
+
+            if day > days_per_month[month - 1]:
+                month += 1
+                day = 1
+
+            if month > 12:
+                year += 1
+                month = 1
+
+            datestamp = str(year).zfill(4) + "," + str(month).zfill(2) + "," \
+                    + str(day).zfill(2) + "," + str(hour).zfill(2) + "," \
+                    + str(minute).zfill(2) + "," + str(second).zfill(2)
+
+            position, v = satellite.propagate(year, month, day, hour, minute, second)
+
+            position_string = ","
+            if (position[0] > 0):
+                position_string += " "
+            position_string += str(position[0]) + ","
+
+            while len(position_string) < 16:
+                position_string += " "
+
+            if (position[1] > 0):
+                position_string += " "
+
+            position_string += str(position[1]) + ","
+
+            while len(position_string) < 31:
+                position_string += " "
+
+            if (position[2] > 0):
+                position_string += " "
+
+            position_string += str(position[2])
+
+            outfile.write(datestamp + position_string + "\n");
+
+        outfile.close()
+
+        eol_index = eol_index + 71 + 71 + 26
+        print '.',
 
 print "\nDone"

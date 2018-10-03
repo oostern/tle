@@ -12,16 +12,16 @@ python tle_calc.py
 
 ## Inputs
 
-### Enter TLE url: 
+### Enter TLE url:
 Enter the url of TLE data, e.g. https://www.celestrak.com/NORAD/elements/iridium.txt
 
-### Enter satellite name: 
-Enter a satellite name, e.g. 'IRIDIUM 70'. This field is optional; leaving it blank should use the first entry in the TLE data.
+### Enter satellite name (blank for all):
+Enter a satellite name, e.g. 'IRIDIUM 70'. This field is optional; leaving it blank will generate generate tracks for all satellites in separate CSV files.
 
-### Enter start date (YYYY, MM, DD, HH, MM, SS): 
+### Enter start date (YYYY, MM, DD, HH, MM, SS):
 Enter the time of the first sample. This field is optional; leaving it blank will use the current system time.
 
-### Enter sample interval (minutes): 
+### Enter sample interval (minutes):
 Enter the sample interval in minutes, e.g. 1
 
 ### Enter total number of samples (max 24H duration):
