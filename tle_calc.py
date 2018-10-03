@@ -56,11 +56,9 @@ if name_index == -1 or eol_index == -1:
     exit(1)
 
 if sat.strip() != "":
-    print "Sate name not empty??"
-    print repr(sat.strip())
-    output_filename = sat.strip() + "-" + str(year) + "_" \
-            + str(month) + "_" + str(day) + "_" + str(hour) + "_" + str(minute) \
-            + "_" + str(second) + "-" + str(inc) + "-" + str(num_samples) + ".csv"
+    output_filename = sat.strip() + "-" + str(year) + "_" + str(month) + "_" \
+            + str(day) + "_" + str(hour) + "_" + str(minute) + "_" \
+            + str(second) + "-" + str(inc) + "-" + str(num_samples) + ".csv"
     output_filename = output_filename.replace(" ", "_").replace("(", "_")\
             .replace(")", "_").replace("/", "_")
 
@@ -97,7 +95,8 @@ if sat.strip() != "":
                 + str(day).zfill(2) + "," + str(hour).zfill(2) + "," \
                 + str(minute).zfill(2) + "," + str(second).zfill(2)
 
-        position, v = satellite.propagate(year, month, day, hour, minute, second)
+        position, v = \
+                satellite.propagate(year, month, day, hour, minute, second)
 
         position_string = ","
         if (position[0] > 0):
@@ -126,15 +125,13 @@ if sat.strip() != "":
 
 else:
     print "Getting all SVs"
-    print eol_index
-    print len(data)
+
     while(eol_index < len(data)):
-        print "in while loop"
         sat = data[(eol_index-25):eol_index].strip()
 
-        output_filename = sat.strip() + "-" + str(year) + "_" \
-                + str(month) + "_" + str(day) + "_" + str(hour) + "_" + str(minute) \
-                + "_" + str(second) + "-" + str(inc) + "-" + str(num_samples) + ".csv"
+        output_filename = sat.strip() + "-" + str(year) + "_" + str(month) \
+                + "_" + str(day) + "_" + str(hour) + "_" + str(minute) + "_" \
+                + str(second) + "-" + str(inc) + "-" + str(num_samples) + ".csv"
         output_filename = output_filename.replace(" ", "_").replace("(", "_")\
                 .replace(")", "_").replace("/", "_")
 
@@ -145,11 +142,6 @@ else:
 
         line1 = data[line1_index:line1_index+70]
         line2 = data[line2_index:line2_index+70]
-
-        print "Using values"
-        print repr(sat)
-        print repr(line1)
-        print repr(line2)
 
         satellite = twoline2rv(line1, line2, wgs84)
 
@@ -176,7 +168,8 @@ else:
                     + str(day).zfill(2) + "," + str(hour).zfill(2) + "," \
                     + str(minute).zfill(2) + "," + str(second).zfill(2)
 
-            position, v = satellite.propagate(year, month, day, hour, minute, second)
+            position, v = \
+                    satellite.propagate(year, month, day, hour, minute, second)
 
             position_string = ","
             if (position[0] > 0):
