@@ -10,13 +10,13 @@ days_per_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 url = raw_input("Enter TLE url: ")
 sat = raw_input("Enter satellite name (blank for all): ").rstrip()
-start = raw_input("Enter start date (YYYY, MM, DD, HH, MM, SS): ")
+start = raw_input("Enter start date (UTC) (YYYY, MM, DD, HH, MM, SS): ")
 inc = int(raw_input("Enter sample interval (minutes): "))
 num_samples = int(\
         raw_input("Enter total number of samples (max 24H duration): "))
 
 if start.strip() == "":
-    now = datetime.datetime.now()
+    now = datetime.datetime.utcnow()
 
     year = now.year
     month = now.month
