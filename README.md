@@ -5,6 +5,11 @@ A simple Python script which generates CSV files with time and satellite positio
 
 TLE data can come from [Celestrak](https://www.celestrak.com) or any other source which is formatted correctly. The TLE data is fetched and SV position is calculated for points at specified time intervals.
 
+You will need SGP4 installed. On Ubuntu this can be accomplished with
+```
+apt install python-sgp4
+```
+
 ## Usage
 ```
 python tle_calc.py
@@ -15,17 +20,24 @@ python tle_calc.py
 ### Enter TLE url:
 Enter the url of TLE data, e.g. https://www.celestrak.com/NORAD/elements/iridium.txt
 
-### Enter satellite name (blank for all):
+### Enter satellite name (blank=all):
 Enter a satellite name, e.g. 'IRIDIUM 70'. This field is optional; leaving it blank will generate generate tracks for all satellites in separate CSV files.
 
-### Enter start date (YYYY, MM, DD, HH, MM, SS):
-Enter the time of the first sample. This field is optional; leaving it blank will use the current system time.
+This performs a partial match against the downloaded TLE; entering "IRIDIUM 7" will match against "IRIDIUM 7 [-]           "
 
-### Enter sample interval (minutes):
-Enter the sample interval in minutes, e.g. 1
+### Enter start date and time (UTC, blank=system time) (YYYY, MM, DD, HH, MM, SS, MICROS):
+Enter the time of the first sample. This field is optional; leaving it blank will use the current system time. Microseconds supports up to 6 digits.
 
-### Enter total number of samples (max 24H duration):
-Enter the total number of positions to calculate, e.g. 101. The 24 hour limit is not enforced, and running longer should work as expected so long as you don't cross a leap day/second; this is not throughly tested and you should verify timestamp transitions in the output.
+### Enter field to be incremented [hr, min, sec, us]:
+Enter the time field to increment
+
+### Enter the incrementation value:
+Enter the value by which to increment the previously specified field. For example, if you entered 'min' at the previous step, entering 15 will produce time steps of 15 minutes.
+
+Note that the python datetime object used to represent timestamps does not support leap seconds, so if your specified interval crosses a leap second the physical time between samples is not expected to be correct.
+
+### Enter total number of samples:
+Enter the total number of positions to calculate, e.g. 101.
 
 ## Outputs
 

@@ -1,4 +1,6 @@
-# Copyright Colton Riedel (2018)
+# -*- coding: utf-8 -*-
+
+# Copyright Colton Riedel (2019)
 # License: MIT
 
 import datetime
@@ -6,68 +8,13 @@ import urllib2
 from sgp4.earth_gravity import wgs84
 from sgp4.io import twoline2rv
 
-days_per_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
-url = raw_input("Enter TLE url: ")
-sat = raw_input("Enter satellite name (blank for all): ").rstrip()
-start = raw_input("Enter start date (UTC) (YYYY, MM, DD, HH, MM, SS): ")
-inc = int(raw_input("Enter sample interval (minutes): "))
-num_samples = int(\
-        raw_input("Enter total number of samples (max 24H duration): "))
-
-if start.strip() == "":
-    now = datetime.datetime.utcnow()
-
-    year = now.year
-    month = now.month
-    day = now.day
-    hour = now.hour
-    minute = now.minute
-    second = now.second
-else:
-    start = start.split()
-    if len(start) != 6:
-        print "\nUnable to parse date"
-        exit(1)
-
-    year = int(start[0])
-    month = int(start[1])
-    day = int(start[2])
-    hour = int(start[3])
-    minute = int(start[4])
-    second = int(start[5])
-
-yyear = year
-mmonth = month
-dday = day
-hhour = hour
-mminute = minute
-ssecond = second
-
-if num_samples * inc >= 1440:
-    print "\nWarning: Longer than 24 hour period specified"
-    print " (I won't stop you, but it might not work)"
-
-if num_samples * inc > (24 - hour) * 60:
-    print "\nWarning: Sample period involves date change"
-    print " (Too lazy to test this well or handle leap years)"
-
-response = urllib2.urlopen(url)
-data = response.read()
-
-name_index = data.find(sat.strip())
-eol_index = data.find("\n", name_index)
-
-if name_index == -1 or eol_index == -1:
-    print "\nNo match for " + sat + " in TLE specified"
-    exit(1)
-
-if sat.strip() != "":
-    output_filename = sat.strip() + "-" + str(year) + "_" + str(month) + "_" \
-            + str(day) + "_" + str(hour) + "_" + str(minute) + "_" \
-            + str(second) + "-" + str(inc) + "-" + str(num_samples) + ".csv"
+def generate_csv(sat, time, eol_index, us_inc, num_samples, data):
+    output_filename = sat.strip() + "-" + \
+            time.strftime("%Y_%m_%d_%H_%M_%S_%f") + "-" + str(us_inc) \
+            + "-" + str(num_samples) + ".csv"
     output_filename = output_filename.replace(" ", "_").replace("(", "_")\
-            .replace(")", "_").replace("/", "_")
+            .replace(")", "_").replace("/", "_")\
+            .replace("[", "_").replace("]", "_")
 
     outfile = open(output_filename, "w")
 
@@ -80,30 +27,12 @@ if sat.strip() != "":
     satellite = twoline2rv(line1, line2, wgs84)
 
     for i in range(num_samples):
-        minute += inc
+        datestamp = time.strftime("%Y,%m,%d,%H,%M,%S.%f")
 
-        if minute > 59:
-            hour += 1
-            minute = minute % 60
+        second = float(str(time.second) + "." + str(time.microsecond))
 
-        if hour > 23:
-            day += 1
-            hour = hour % 24
-
-        if day > days_per_month[month - 1]:
-            month += 1
-            day = 1
-
-        if month > 12:
-            year += 1
-            month = 1
-
-        datestamp = str(year).zfill(4) + "," + str(month).zfill(2) + "," \
-                + str(day).zfill(2) + "," + str(hour).zfill(2) + "," \
-                + str(minute).zfill(2) + "," + str(second).zfill(2)
-
-        position, v = \
-                satellite.propagate(year, month, day, hour, minute, second)
+        position, v = satellite.propagate(time.year, time.month, time.day, \
+                time.hour, time.minute, second)
 
         position_string = ","
         if (position[0] > 0):
@@ -128,90 +57,102 @@ if sat.strip() != "":
 
         outfile.write(datestamp + position_string + "\n");
 
+        time = time + datetime.timedelta(microseconds=us_inc)
+
     outfile.close()
 
-else:
-    print "Getting all SVs"
+def main():
+    url = raw_input("Enter TLE url: ")
 
-    while(eol_index < len(data)):
-        sat = data[(eol_index-25):eol_index].strip()
+    try:
+        response = urllib2.urlopen(url)
+        data = response.read()
+    except:
+        print "  \033[31mError fetching specified TLE file\033[0m"
+        exit(1)
 
-        output_filename = sat.strip() + "-" + str(year) + "_" + str(month) \
-                + "_" + str(day) + "_" + str(hour) + "_" + str(minute) + "_" \
-                + str(second) + "-" + str(inc) + "-" + str(num_samples) + ".csv"
-        output_filename = output_filename.replace(" ", "_").replace("(", "_")\
-                .replace(")", "_").replace("/", "_")
+    sat = raw_input("Enter satellite name (blank=all): ").rstrip()
 
-        outfile = open(output_filename, "w")
+    name_index = data.find(sat.strip())
+    eol_index = data.find("\n", name_index)
 
-        line1_index = eol_index + 1
-        line2_index = eol_index + 72
+    if sat.strip() == "":
+        print "  \033[36mUsing all satellites in supplied TLE\033[0m"
+    else:
+        if name_index == -1 or eol_index == -1:
+            print "  \033[31mNo match for " + sat + " in TLE specified\033[0m"
+            exit(1)
 
-        line1 = data[line1_index:line1_index+70]
-        line2 = data[line2_index:line2_index+70]
+    start = raw_input("Enter start date and time (UTC, blank=system time) " \
+            + "(YYYY MM DD HH MM SS MICROS): ")
 
-        satellite = twoline2rv(line1, line2, wgs84)
+    if start.strip() == "":
+        time = datetime.datetime.utcnow()
+        print "  \033[36mUsing current system time (UTC): " \
+                + time.isoformat(' ') + "\033[0m"
+    else:
+        try:
+            time = datetime.datetime.strptime(start.strip(), "%Y %m %d %H %M %S %f")
+            print "  \033[36mParsed start time as: " + time.isoformat(' ') \
+                    + "\033[0m"
+        except:
+            print "  \033[31mUnable to parse start time from: " + start
+            print "    example of suitable input: 2019 01 09 22 05 16 01\033[0m"
+            exit(1)
 
-        for i in range(num_samples):
-            minute += inc
+    inc_field = raw_input("Enter field to be incremented [hr, min, sec, us]: ")
 
-            if minute > 59:
-                hour += 1
-                minute = minute % 60
+    try:
+        inc = int(raw_input("Enter incrementation value: "))
+    except:
+        print "  \033[31mUnable to parse value\033[0m"
+        exit(1)
 
-            if hour > 23:
-                day += 1
-                hour = hour % 24
+    us_inc = inc
 
-            if day > days_per_month[month - 1]:
-                month += 1
-                day = 1
+    if inc_field.strip() == "hr":
+        us_inc = us_inc * 3.6e9
 
-            if month > 12:
-                year += 1
-                month = 1
+        print "  \033[36mEach time step will increase by " + str(inc) \
+                + " hour(s) (" + str(us_inc) + "μs)\033[0m"
+    elif inc_field.strip() == "min":
+        us_inc = us_inc * 6e7
 
-            datestamp = str(year).zfill(4) + "," + str(month).zfill(2) + "," \
-                    + str(day).zfill(2) + "," + str(hour).zfill(2) + "," \
-                    + str(minute).zfill(2) + "," + str(second).zfill(2)
+        print "  \033[36mEach time step will increase by " + str(inc) \
+                + " minute(s) (" + str(us_inc) + "μs)\033[0m"
+    elif inc_field.strip() == "sec":
+        us_inc = us_inc * 1e6
 
-            position, v = \
-                    satellite.propagate(year, month, day, hour, minute, second)
+        print "  \033[36mEach time step will increase by " + str(inc) \
+                + " second(s) (" + str(us_inc) + "μs)\033[0m"
+    elif inc_field.strip() == "us":
+        print "  \033[36mEach time step will increase by " + str(us_inc) \
+                + "μs\033[0m"
+    else:
+        print "  \033[31mUnable to parse time increment field\033[0m"
+        exit(1)
 
-            position_string = ","
-            if (position[0] > 0):
-                position_string += " "
-            position_string += str(position[0]) + ","
+    try:
+        num_samples = int(\
+                raw_input("Enter total number of samples: "))
+    except:
+        print "  \033[31mUnable to parse value\033[0m"
+        exit(1)
 
-            while len(position_string) < 16:
-                position_string += " "
+    if sat.strip() != "":
+        generate_csv(sat, time, eol_index, us_inc, num_samples, data)
+    else:
+        print "\nGetting all SVs"
 
-            if (position[1] > 0):
-                position_string += " "
+        while(eol_index < len(data)):
+            sat = data[(eol_index-25):eol_index].strip()
 
-            position_string += str(position[1]) + ","
+            generate_csv(sat, time, eol_index, us_inc, num_samples, data)
 
-            while len(position_string) < 31:
-                position_string += " "
+            eol_index = eol_index + 71 + 71 + 26
 
-            if (position[2] > 0):
-                position_string += " "
+            print '.',
 
-            position_string += str(position[2])
+    print "\n\n\033[1;32mFinished\033[0m"
 
-            outfile.write(datestamp + position_string + "\n");
-
-        outfile.close()
-
-        eol_index = eol_index + 71 + 71 + 26
-
-        year = yyear
-        month = mmonth
-        day = dday
-        hour = hhour
-        minute = mminute
-        second = ssecond
-
-        print '.',
-
-print "\nDone"
+main()
