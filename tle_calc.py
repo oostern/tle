@@ -97,7 +97,8 @@ def main():
                     + "\033[0m"
         except:
             print "  \033[31mUnable to parse start time from: " + start
-            print "    example of suitable input: 2019 01 09 22 05 16 01\033[0m"
+            print "        example of suitable input: " \
+                    + "2019 01 09 22 05 16 01\033[0m"
             exit(1)
 
     inc_field = raw_input("Enter field to be incremented [hr, min, sec, us]: ")
