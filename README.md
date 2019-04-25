@@ -23,7 +23,7 @@ Enter the url of TLE data, e.g. https://www.celestrak.com/NORAD/elements/iridium
 ### Enter satellite name (blank=all):
 Enter a satellite name, e.g. 'IRIDIUM 70'. This field is optional; leaving it blank will generate generate tracks for all satellites in separate CSV files.
 
-This performs a partial match against the downloaded TLE; entering "IRIDIUM 7" will match against "IRIDIUM 7 [-]           "
+This performs a partial match against the downloaded TLE; entering ```IRIDIUM 7``` will match against ```IRIDIUM 7 [-]           ```
 
 ### Enter start date and time (UTC, blank=system time) (YYYY, MM, DD, HH, MM, SS, MICROS):
 Enter the time of the first sample. This field is optional; leaving it blank will use the current system time. Microseconds supports up to 6 digits.
@@ -41,4 +41,4 @@ Enter the total number of positions to calculate, e.g. 101.
 
 ## Outputs
 
-A CSV file is generated containing timestamps and x, y, x satellite positions in ECEF coordinates. By default WGS84 is used, but this can be modified in the source code.
+A CSV file is generated containing timestamps (year, month, day, hour, minute, second) and x, y, x satellite positions in ECEF coordinates. By default WGS84 is used, but this can be modified in the source code.
